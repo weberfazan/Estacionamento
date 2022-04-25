@@ -9,9 +9,24 @@ namespace Estacionamento
     class Program
     {
         static void Main(string[] args)
-        { 
+        {
 
-            
+            Menu menu = new Menu();
+
+            try
+            {
+
+            menu.Executar();
+
+            Console.ReadLine();
+
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine($"Algo deu errado!\n\n{e}");
+
+            }
 
 
         }//fim do metodo
