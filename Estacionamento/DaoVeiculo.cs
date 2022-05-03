@@ -13,13 +13,11 @@ namespace Estacionamento
         MySqlConnection conexao;
         public string dados;
         public string resultado;
-        public int[] cod;
         public string[] placa;
         public string[] modelo;
         public string[] cor;
         public string[] fabricante;
         public int i;
-        public string msg;
 
 
         public int contadorLinhasTabela;
@@ -28,7 +26,7 @@ namespace Estacionamento
         //Construtor
         public DaoVeiculo()
         {
-            conexao = new MySqlConnection("server=localhost;DataBase=Estacionamento;Uid=root;Password=;");
+            conexao = new MySqlConnection("server=localhost;DataBase=Estacionamentoti13n;Uid=root;Password=;Convert Zero Datetime=True");
             try
             {
                 conexao.Open();//solicitando a entrada do banco de dados                
@@ -46,7 +44,7 @@ namespace Estacionamento
             try
             {
 
-                dados = "('','" + placa + "','" + modelo + "','" + cor + "','" + fabricante + "','" + "')";
+                dados = $"('{placa}','{modelo}','{cor}','{fabricante}')";
                 resultado = "Insert into veiculo(placa, modelo, cor, fabricante) values" + dados;
                 //Executar o comando resultado no banco de dados
                 MySqlCommand sql = new MySqlCommand(resultado, conexao);
@@ -68,7 +66,6 @@ namespace Estacionamento
             string query = "select * from veiculo";//coletando dado do Banco de Dados
 
             //Instanciando os Vetores
-            cod = new int[100];
             placa = new string[100];
             modelo = new string[100];
             cor = new string[100];
@@ -78,10 +75,9 @@ namespace Estacionamento
             //Dar valores iniciais para ele
             for (i = 0; i < 100; i++)
             {
-                cod[i] = 0;
                 placa[i] = "";
                 modelo[i] = "";
-                cor[i]  = "";
+                cor[i] = "";
                 fabricante[i] = "";
 
             }//fim da repetição
@@ -94,11 +90,11 @@ namespace Estacionamento
             i = 0;
             while (leitura.Read())
             {
-                cod[i] = Convert.ToInt32(leitura["codigo"]);
                 placa[i] = leitura["placa"] + "";
                 modelo[i] = leitura["modelo"] + "";
                 cor[i] = leitura["cor"] + "";
                 fabricante[i] = leitura["fabricante"] + "";
+
                 i++;
                 contadorLinhasTabela++;
             }//fim do metodo while
@@ -108,116 +104,54 @@ namespace Estacionamento
 
         }//fim do preencher vetor
 
-        public string ConsultarIndividual(int codigo)
+        public void ConsultarIndividual(string pla)
         {
             PreencherVetor();
 
             for (int i = 0; i < contadorLinhasTabela; i++)
             {
 
-                if (codigo == cod[i])
+                if (pla == placa[i])
                 {
-                    msg += "\n\nDados veículo\nCodigo:" + cod[i]
-                                      + ",placa: " + placa[i]
-                                      + ",modelo: " + modelo[i]
-                                      + ",cor: " + cor[i]
-                                      + ",fabricante: " + fabricante[i];
-
-                    return msg;
+                    Console.WriteLine($"\n\nDados veículo\n" +
+                           $"Placa: {placa[i]}\n" +
+                           $"Modelo: {modelo[i]}\n" +
+                           $"Cor: {cor}\n" +
+                           $"Fabricante: {fabricante}\n");
                 }
 
-            }
+                Console.WriteLine("Código não encontrado!");
 
-            return "Código não encontrado!";
+            }
         }
 
-        public string ConsultarTudo()
+        public void ConsultarTudo()
         {
             //Preencher o Vetor
             PreencherVetor();
-            msg = "";
+
             for (int i = 0; i < contadorLinhasTabela; i++)
             {
-                msg += "\n\nDados veículo\nCodigo:" + cod[i]
-                                      + ",placa: " + placa[i]
-                                      + ",modelo: " + modelo[i]
-                                      + ",cor: " + cor[i]
-                                      + ",fabricante: " + fabricante[i];
+                Console.WriteLine($"\n\nDados veículo\n" +
+                           $"Placa: {placa[i]}\n" +
+                           $"Modelo: {modelo[i]}\n" +
+                           $"Cor: {cor}\n" +
+                           $"Fabricante: {fabricante}\n");
 
             }//fim do for
-            return msg;
 
         }//fim do consultar tudo
 
-        public string Consultarplaca(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contadorLinhasTabela; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return placa[i];
-                }//fim do if
-            }//fim do for
-            return "Codigo não encontrado!";
-        }//fim do consultar placa
-
-        public string Consultarmodelo(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contadorLinhasTabela; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return modelo[i];
-                }//fim do if
-            }//fim do for
-
-            return "Codigo não encontrado!";
-
-        }//fim do consultar modelo
-
-        public string Consultarcor(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contadorLinhasTabela; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return cor[i];
-                }//fim do if
-            }//fim do for
-
-            return "Codigo não encontrado!";
-
-        }//fim do consultar cor
-
-        public string Consultarfabricante(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contadorLinhasTabela; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return fabricante[i];
-                }//fim do if
-            }//fim do for
-
-            return "Código não encontrado!";
-
-        }//fim do consultar fabricante
-
-        public void Atualizar(string campo, int codigo, string novoDado)
+        public void Atualizar(string campo, string pla, string novoDado)
         {
             try
             {
 
-            resultado = "update veiculo set" + campo + " = '" +
-                         novoDado + "' where codigo = '" + codigo + "'";
-            //Executar o script
-            MySqlCommand sql = new MySqlCommand(resultado, conexao);
-            resultado = "" + sql.ExecuteNonQuery();
-            Console.WriteLine("Dado Atualizado com Sucesso!");
+                resultado = $"update veiculo set {campo} = '{novoDado}' where placa = {pla}";
+                //Executar o script
+                MySqlCommand sql = new MySqlCommand(resultado, conexao);
+                resultado = "" + sql.ExecuteNonQuery();
+                Console.WriteLine("Dado Atualizado com Sucesso!");
             }
             catch (Exception e)
             {
@@ -226,9 +160,9 @@ namespace Estacionamento
             }// fim do catch
         }//fim do Atualizar
 
-        public void Deletar(int codigo)
+        public void Deletar(string pla)
         {
-            resultado = "delete from veiculo where codigo = '" + codigo + "'";
+            resultado = $"delete from veiculo where placa = '{pla}'";
             //Executar o Comando
             MySqlCommand sql = new MySqlCommand(resultado, conexao);
             resultado = "" + sql.ExecuteNonQuery();

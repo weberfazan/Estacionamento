@@ -13,19 +13,19 @@ namespace Estacionamento
         MySqlConnection conexao;
         public string dados;
         public string resultado;
-        public int[] cod;
+        public long[] CPF;
         public string[] nome;
-        public DateTime[] dataNascimento;
-        public string[] telefone;        
-        public int i;
-        public string msg;
-        public int contador;
-        public double[] valorPagamento;
+        public DateTime[] dataDeNascimento;
+        public string[] telefone;
+        public double[] valor;
+        public int contadorLinhasTabela;
+
+        int opcao;
 
         //Construtor
         public DaoCliente()
         {
-            conexao = new MySqlConnection("server=localhost;DataBase=BancoDeDadosTI13N;Uid=root;Password=;");
+            conexao = new MySqlConnection("server=localhost;DataBase=Estacionamentoti13n;Uid=root;Password=;Convert Zero Datetime=True");
             try
             {
                 conexao.Open();//solicitando a entrada do banco de dados                
@@ -37,13 +37,108 @@ namespace Estacionamento
             }//fim da tentativa de conexão com o banco de dados
         }//fim do metodo construtor
 
+        
+        public void MenuCliente()
+        {
+            Console.WriteLine("\n\nEscolha uma das opções abaixo: \n\n" +
+            "\n1. Cadastrar" +
+            "\n2. Consultar Tudo" +
+            "\n3. Consultar Individual" +
+            "\n4. Atualizar" +
+            "\n5. Excluir");
+            opcao = Convert.ToInt32(Console.ReadLine());
+        }
+
+       
+        public void ExecutarCliente()
+        {
+
+            do
+            {
+                MenuCliente();
+
+                switch (opcao)
+                {
+                    case 1:
+                        //Colentando os dados
+                        Console.WriteLine("Informe seu nome: ");
+                        string nome = Console.ReadLine();
+                        Console.WriteLine("\nInforme seu telefone: ");
+                        string telefone = Console.ReadLine();
+                        Console.WriteLine("\nInforme DataDeNascimento: ");
+                        DateTime DataDeNascimento= Convert.ToDateTime(Console.ReadLine());
+                        Console.WriteLine("Informe o seu CPF:");
+                        long CPF = (long)Convert.ToDouble(Console.ReadLine());
+                        Console.WriteLine("Informe valor:");
+                        double valor = Convert.ToDouble(Console.ReadLine());
+
+                        //Executar o método inserir
+                        Inserir(CPF, nome, telefone, DataDeNascimento, valor);
+
+                        break;
+
+                    case 2:
+
+                        Console.Clear();
+
+                        ConsultarTudo();
+
+                        break;
+
+                    case 3:
+
+                        Console.WriteLine("\nInsira o CPF que você quer consultar:");
+
+                        CPF = (long)Convert.ToDouble(Console.Read());
+
+                        Console.Clear();
+
+                        ConsultarIndividual(CPF);
+                       
+
+                        break;
+
+                    case 4:
+
+                        
+                                Console.WriteLine("\n\nDigite o CPF do Cliente");
+                                CPF = (long)Convert.ToDouble(Console.ReadLine());
+                                Console.WriteLine("Digite o campo que quer alterar:");
+                                string campo = Console.ReadLine();
+                                Console.WriteLine("Digite o novo dado");
+                                string novoDado = Console.ReadLine();
+
+                        Atualizar(campo, novoDado, CPF);
+
+
+                        break;
+
+                    case 5:
+
+                        Console.WriteLine("Insira o CPF do Cliente que você quer excluir");
+                        CPF = (long)Convert.ToDouble(Console.ReadLine());
+
+                        Deletar(CPF);
+
+                        break;
+
+                    default:
+
+                        Console.WriteLine("Digite um valor válido!");
+
+                        break;
+                }
+
+            } while (opcao != 0);
+        }
+
         //criar o metodo inserir
-        public void Inserir(string nome, string telefone, DateTime dataNascimento, double valorPagamento)
+        public void Inserir(long CPF, string nome, string telefone, DateTime dataDeNascimento, double valor)
         {
             try
             {
-                dados = "('','" + nome + "','" + telefone + "','" + dataNascimento + "','" + valorPagamento + "')";
-                resultado = "Insert into Pessoa(codigo, nome, telefone, dataNascimento, valorPagamento) values" + dados;
+                dados = $"('{CPF}','{nome}','{dataDeNascimento:yyyy-MM-dd}','{telefone}','{valor}')";
+                resultado = "Insert into cliente(CPF, nome, dataDeNascimento, telefone, valor) values" + dados;
                 //Executar o comando resultado no banco de dados
                 MySqlCommand sql = new MySqlCommand(resultado, conexao);
                 resultado = "" + sql.ExecuteNonQuery();
@@ -61,23 +156,24 @@ namespace Estacionamento
 
         public void PreencherVetor()
         {
-            string query = "select * from pessoa";//coletando dado do Banco de Dados
+            string query = "select * from cliente";//coletando dado do Banco de Dados
 
             //Instanciando os Vetores
-            cod = new int[100];
+            CPF = new long[100];
             nome = new string[100];
             telefone = new string[100];
-            dataNascimento = new DateTime[100];
-            valorPagamento = new double[100];
+            dataDeNascimento = new DateTime[100];
+            valor = new double[100];
+            int i;
 
             //Dar valores iniciais para ele
             for (i = 0; i < 100; i++)
             {
-                cod[i] = 0;
+                CPF[i] = 0;
                 nome[i] = "";
                 telefone[i] = "";
-                dataNascimento[i] = new DateTime() ;
-                valorPagamento[i] = 0;
+                dataDeNascimento[i] = new DateTime();
+                valor[i] = 0;
             }//fim da repetição
 
             //criar o comando para coletar dados
@@ -85,16 +181,17 @@ namespace Estacionamento
             //usar os comandos lendo os dados do banco de dados
             MySqlDataReader leitura = coletar.ExecuteReader();
 
-            i = 0;
+             i = 0;
             while (leitura.Read())
             {
-                cod[i] = Convert.ToInt32(leitura["codigo"]);
+                CPF[i] = (long)Convert.ToDouble(leitura["CPF"] + "");
                 nome[i] = leitura["nome"] + "";
                 telefone[i] = leitura["telefone"] + "";
-                dataNascimento[i] = Convert.ToDateTime(leitura["dataDeNascimento"]);
-                valorPagamento[i] = Convert.ToDouble( leitura["valorPagamento"]); 
+                dataDeNascimento[i] = Convert.ToDateTime(leitura["dataDeNascimento"] + "");
+                valor[i] = Convert.ToDouble( leitura["valor"] + ""); 
+                
                 i++;
-                contador++;
+                contadorLinhasTabela++;
             }//fim do metodo while
 
             //fechar o dataReader
@@ -102,81 +199,47 @@ namespace Estacionamento
 
         }//fim do preencher vetor
 
-        public string ConsultarTudo()
+        public void ConsultarIndividual(long documento)
+        {
+            PreencherVetor();
+
+            for (int i = 0; i < contadorLinhasTabela; i++)
+            {
+
+                if (documento == CPF[i])
+                {
+                    Console.WriteLine($"CPF: {CPF[i]}\n" +
+                                      $"Nome: {nome[i]}\n" +
+                                      $"Telefone: {telefone[i]}\n" +
+                                      $"Data de nascimento: {dataDeNascimento[i]:dd/MM/yyyy}\n" +
+                                      $"Valor para pagamento: {valor[i]:C2}\n\n");
+                }
+                Console.WriteLine("Não encontrado!");
+            }
+        }
+
+        public void ConsultarTudo()
         {
             //Preencher o Vetor
             PreencherVetor();
-            msg = "";
-            for (int i = 0; i < contador; i++)
+
+            for (int i = 0; i < contadorLinhasTabela; i++)
             {
-                msg += "\n\n Codigo:" + cod[i]
-                                      + ",Nome:" + nome[i]
-                                      + ",Telefone:" + telefone[i]
-                                      + ",Data de Nascimento: " + dataNascimento[i]
-                                      + "Valor Pagamento: " + valorPagamento[i];
+                Console.WriteLine($"CPF: {CPF[i]}\n" +
+                                  $"Nome: {nome[i]}\n" +
+                                  $"Telefone: {telefone[i]}\n" +
+                                  $"Data de nascimento: {dataDeNascimento[i]:dd/MM/yyyy}\n" +
+                                  $"Valor para pagamento: {valor[i]:C2}\n\n");
+
             }//fim do for
-            return msg;
 
         }//fim do consultar tudo
 
-        public string ConsultarNome(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contador; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return nome[i];
-                }//fim do if
-            }//fim do for
-            return "Codigo não encontrado!";
-        }//fim do consultar nome
-
-        public string ConsultarTelefone(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contador; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return telefone[i];
-                }//fim do if
-            }//fim do for
-            return "Codigo não encontrado!";
-        }//fim do consultar telefone
-
-        public DateTime ConsultarDataNascimento(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contador; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return dataNascimento[i];
-                }//fim do if
-            }//fim do for
-            return new DateTime();
-        }//fim do consultar dataNascimento
-
-        public double ValorPagamento(int codigo)
-        {
-            PreencherVetor();
-            for (int i = 0; i < contador; i++)
-            {
-                if (codigo == cod[i])
-                {
-                    return valorPagamento[i];
-                }//fim do if
-            }//fim do for
-            return 00000.00;
-        }//fim do consultar Valor Pagamento
-
-        public void Atualizar(string campo, string novoDado, int codigo)
+        public void Atualizar(string campo, string novoDado, long CPF)
         {
             try
             {
-                resultado = "update pessoa set" + campo + " = '" +
-                             novoDado + "' where codigo '" + codigo + "'";
+                resultado = $"update cliente set {campo} = '{novoDado}' where CPF = '{CPF}'";
                 //Executar o script
                 MySqlCommand sql = new MySqlCommand(resultado, conexao);
                 resultado = "" + sql.ExecuteNonQuery();
@@ -191,9 +254,9 @@ namespace Estacionamento
 
         }//fim do Atualizar
 
-        public void Deletar(int codigo)
+        public void Deletar(long CPF)
         {
-            resultado = "delete from pessoa where codigo = '" + codigo + "'";
+            resultado = $"delete from Cliente where CPF = '{CPF}'";
             //Executar o Comando
             MySqlCommand sql = new MySqlCommand(resultado, conexao);
             resultado = "" + sql.ExecuteNonQuery();
